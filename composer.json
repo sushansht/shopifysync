@@ -1,0 +1,35 @@
+{
+  "name": "dpl/shopifysync",
+  "description": "This package will sync the product from shopify to your app.",
+  "type": "library",
+  "license": "MIT",
+  "version": "1.0.0",
+  "authors": [
+    {
+      "name": "Sushan Shrestha",
+      "email": "sudhan@doe.com"
+    },
+     {
+      "name": "Dikshant Niroula",
+      "email": "john@doe.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "dpl\\ShopifySync\\": "src"
+    }
+  },
+  "extra": {
+      "laravel": {
+          "providers": [
+              "dpl\\ShopifySync\\ShopifySyncServiceProvider"
+          ]
+      }
+  },
+  "require-dev": {
+    "orchestra/testbench": "^9.5"
+  },
+  "require": {
+    "laravel/horizon" : "^5.29.3"
+  }
+}
