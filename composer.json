@@ -7,11 +7,11 @@
   "authors": [
     {
       "name": "Sushan Shrestha",
-      "email": "sudhan@doe.com"
+      "email": "sushan.shrestha@dpl.company"
     },
      {
       "name": "Dikshant Niroula",
-      "email": "john@doe.com"
+      "email": "dikshant.niroula@dpl.company"
     }
   ],
   "autoload": {
