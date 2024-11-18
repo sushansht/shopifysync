@@ -41,6 +41,9 @@ class PollBulkOperationStatus extends Command
         foreach($bulkOperations as $bulkOperation)
         {
             $token = $token_model::select($token_column)->where('specifier', $bulkOperation->specifier)->first();
+            if (!$token) {
+                continue;
+            }
             $this->info("Pool Id: ".$bulkOperation->id);
             $shopifyGqlClient = new Graphql($bulkOperation->specifier, $token->token);
             $pollingService = new BulkOperationPollingService($shopifyGqlClient);
