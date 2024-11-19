@@ -91,7 +91,7 @@ class JsonlFileReaderService
 
             // Save the last product group after exiting the loop
             if (!empty($currentGroup['product'])) {
-                $dataModelMappingClass->$dataModelMappingFunction($currentGroup);
+                (new $dataModelMappingClass)->$dataModelMappingFunction($currentGroup);
             }
 
             fclose($file);
