@@ -3,7 +3,7 @@
   "description": "This package will sync the product from shopify to your app.",
   "type": "library",
   "license": "MIT",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "authors": [
     {
       "name": "Sushan Shrestha",
