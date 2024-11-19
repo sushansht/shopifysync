@@ -26,12 +26,16 @@ class ShopifySyncServiceProvider extends ServiceProvider {
                 __DIR__.'/config/config.php' => config_path('shopifysync.php'),
                 ], 'config');
 
-               if (! class_exists('CreateShopifySyncTable')) {
-                    $this->publishes([
-                    __DIR__ . '/../database/migrations/create_shopify_sync_shop_table.php.stub' => database_path('migrations/' . date('Y_m_d_His', time()) . '_create_shopify_sync_shop_table.php'),
-                    __DIR__ . '/../database/migrations/create_shop_bulk_query_operations_table.php.stub' => database_path('migrations/' . date('Y_m_d_His', time()) . '_create_shop_bulk_query_operations_table.php')
-                    ], 'migrations');
-                }
+            if (!class_exists('CreateShopifySyncTable')) {
+                $this->publishes([
+                __DIR__ . '/../database/migrations/create_shopify_sync_shop_table.php.stub' => database_path('migrations/' . date('Y_m_d_His', time()) . '_create_shopify_sync_shop_table.php'),
+                __DIR__ . '/../database/migrations/create_shop_bulk_query_operations_table.php.stub' => database_path('migrations/' . date('Y_m_d_His', time()) . '_create_shop_bulk_query_operations_table.php')
+                ], 'migrations');
+            }
+
+            if (file_exists(__DIR__ . '/helpers.php')) {
+                require __DIR__ . '/helpers.php';
+            }
         }
     }
 

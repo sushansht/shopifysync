@@ -21,10 +21,10 @@ class ProductBulkQueryService
      */
     public function runBulkOperation($lastFeedRefresh, $specifier)
     {
-        $queryCondition = 'status:active';
+        $queryCondition = "status:active";
 
         if ($lastFeedRefresh !== null) {
-            $queryCondition .= " AND updated_at:>"."'".$lastFeedRefresh."'";
+            $queryCondition .= " AND updated_at:>{$lastFeedRefresh}";
         }
 
         $shop_model = config('shopifysync.shop_model');
@@ -46,12 +46,12 @@ class ProductBulkQueryService
                             }
                         }' : '';
 
-        $graphQL = '
+        $graphQL = <<<QUERY
         mutation {
             bulkOperationRunQuery(
                 query: """
                 {
-                    products(query: "' . $queryCondition . '") {
+                    products(query: "{$queryCondition}") {
                         edges {
                             node {
                                 id
@@ -122,7 +122,7 @@ class ProductBulkQueryService
                                         }
                                     }
                                 }
-                                '.$metafieldsQuery.'
+                                '{$metafieldsQuery}'
                             }
                         }
                     }
@@ -138,7 +138,8 @@ class ProductBulkQueryService
                     message
                 }
             }
-        }';
+        }
+        QUERY;
 
         try {
             $response = $this->client->query($graphQL);
