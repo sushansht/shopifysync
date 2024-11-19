@@ -48,9 +48,9 @@ class JsonlFileReaderService
 
                 if (isset($record['id']) && preg_match($productGidRegex, $record['id'], $matches)) {
                     $productId = $matches[1];
-                    // if ($currentProductId && $currentProductId !== $productId) {
-                    //     $dataModelMappingService->handleMappingAndCreation($currentGroup);
-                    // }
+                    if ($currentProductId && $currentProductId !== $productId) {
+                        (new $dataModelMappingClass($specifier))->$dataModelMappingFunction($currentGroup);
+                    }
                     $currentProductId = $productId;
                     $currentShopifyProduct = $record;
                     $currentGroup = [
