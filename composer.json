@@ -1,9 +1,9 @@
 {
-  "name": "dpl/shopifysync",
-  "description": "This package will sync the product from shopify to your app.",
+  "name": "test/oackdpl",
+  "description": "",
   "type": "library",
   "license": "MIT",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "authors": [
     {
       "name": "Sushan Shrestha",
