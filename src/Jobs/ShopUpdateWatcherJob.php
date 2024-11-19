@@ -73,9 +73,7 @@ class ShopUpdateWatcherJob implements ShouldQueue, ShouldBeUnique
 
             $shopifyGqlClient = new Graphql($specifier, $token);
             $productCountService = new ProductCountGqlService($shopifyGqlClient);
-            $last_processed_at = is_null($sync_shop->last_processed_at) ? '1990-01-01 01:00:00' : $sync_shop->last_processed_at;
-            $date = new DateTime($last_processed_at, new DateTimeZone('UTC'));
-            $last_processed_at = $date->format('Y-m-d\TH:i:s\Z');
+            $last_processed_at = is_null($sync_shop->last_processed_at) ? null : $sync_shop->last_processed_at;
             $productCount = $productCountService->getProductsCount($last_processed_at);
             if($productCount > 0){
                 RequestBulkQueryJob::dispatch($specifier, $token, $last_processed_at)->onQueue('shopifysync-request-bulkquery');

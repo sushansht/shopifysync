@@ -41,7 +41,7 @@ class RequestBulkQueryJob implements ShouldQueue
 
         try {
             $bulkOperationService = new ProductBulkQueryService($shopifyGqlClient);
-            $bulkOperationData = $bulkOperationService->runBulkOperation($this->last_processed_at);
+            $bulkOperationData = $bulkOperationService->runBulkOperation($this->last_processed_at,$this->specifier);
 
             if ($bulkOperationData) {
                 ShopBulkQueryOperation::create([

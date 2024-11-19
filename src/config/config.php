@@ -12,5 +12,6 @@ return [
     'specifier_model' => "",
     'specifier_column' => "",
     'data_saving_service' => '',
-    'data_saving_function' => ''
+    'data_saving_function' => '',
+    'should_sync_metafield_column' => ""
 ];

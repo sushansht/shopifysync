@@ -21,9 +21,15 @@ class ProductCountGqlService
 
     public function getProductsCount($updatedAt)
     {
+        $queryCondition = 'status:active';
+
+        if ($updatedAt !== null) {
+            $queryCondition .= " AND updated_at:>"."'".$updatedAt."'";
+        }
+  
         $graphQL = <<<QUERY
             query {
-                productsCount(query: "status:ACTIVE AND updated_at:>' . $updatedAt . '") {
+                productsCount(query: "' . $queryCondition . '") {
                     count
                 }
             }
