@@ -122,7 +122,7 @@ class ProductBulkQueryService
                                         }
                                     }
                                 }
-                                '{$metafieldsQuery}'
+                                {$metafieldsQuery}
                             }
                         }
                     }
