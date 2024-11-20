@@ -19,13 +19,16 @@ class ProductBulkQueryService
      *
      * @return array|null
      */
-    public function runBulkOperation($lastFeedRefresh, $specifier)
+    public function runBulkOperation($lastFeedRefresh, $specifier, $current_time)
     {
         $queryCondition = "status:active";
 
         if ($lastFeedRefresh !== null) {
             $queryCondition .= " AND updated_at:>{$lastFeedRefresh}";
         }
+
+        $queryCondition .= " AND updated_at:<{$current_time}";
+
 
         $shop_model = config('shopifysync.shop_model');
         $should_sync_metafield_column = config('shopifysync.should_sync_metafield_column');
@@ -108,7 +111,7 @@ class ProductBulkQueryService
                                         }
                                     }
                                 }
-                                media(first: 10) {
+                                media(first: 20) {
                                     edges {
                                         node {
                                             id
@@ -119,6 +122,12 @@ class ProductBulkQueryService
                                                     url
                                                 }
                                             }
+                                            ... on Video {
+                                                id
+                                                sources {
+                                                    url
+                                                }
+                                            }   
                                         }
                                     }
                                 }
