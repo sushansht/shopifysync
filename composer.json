@@ -3,7 +3,7 @@
   "description": "",
   "type": "library",
   "license": "MIT",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "authors": [
     {
       "name": "Sushan Shrestha",
@@ -30,5 +30,6 @@
     "orchestra/testbench": "^9.5"
   },
   "require": {
+     "shopify/shopify-api": "^5.0"
   }
 }

@@ -2,6 +2,7 @@
 
 namespace dpl\ShopifySync\Jobs;
 
+use dpl\ShopifySync\Services\CollectionCountGqlService;
 use dpl\ShopifySync\Services\ProductCountGqlService;
 use DateTime;
 use DateTimeZone;
@@ -81,6 +82,17 @@ class ShopUpdateWatcherJob implements ShouldQueue, ShouldBeUnique
                     'is_bulk_query_in_progress' => 1
                 ]);
                 return;
+            }
+
+            //Get collection Count
+            $collectionCountService = new CollectionCountGqlService($shopifyGqlClient);
+            $smartCollectionCount = $collectionCountService->getCollectionCount($last_processed_at,"smart");
+            $customCollectionCount = $collectionCountService->getCollectionCount($last_processed_at,"custom");
+            if($smartCollectionCount > 0){
+                CollectionFetchAndProcessJob::dispatch($sync_shop, $token, $last_processed_at,$cursor=null,$collectionType="smart")->onQueue('shopifysync-request-bulkquery');
+            }
+            if($customCollectionCount > 0){
+                CollectionFetchAndProcessJob::dispatch($sync_shop, $token, $last_processed_at,$cursor=null,$collectionType="custom")->onQueue('shopifysync-request-bulkquery');
             }
         }
     }
