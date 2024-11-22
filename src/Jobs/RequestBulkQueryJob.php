@@ -4,6 +4,7 @@ namespace dpl\ShopifySync\Jobs;
 
 use dpl\ShopifySync\Models\ShopBulkQueryOperation;
 use dpl\ShopifySync\Services\ProductBulkQueryService;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -18,18 +19,21 @@ class RequestBulkQueryJob implements ShouldQueue
     protected $specifier;
     protected $token;
     protected $last_processed_at;
+    protected $current_time;
     /**
      * Create a new job instance.
      */
     public function __construct(
         $specifier,
         $token,
-        $last_processed_at=null
+        $last_processed_at=null,
+        $current_time
     )
     {
         $this->specifier = $specifier;
         $this->token = $token;
         $this->last_processed_at = $last_processed_at;
+        $this->current_time = $current_time;
     }
 
     /**
@@ -41,7 +45,7 @@ class RequestBulkQueryJob implements ShouldQueue
 
         try {
             $bulkOperationService = new ProductBulkQueryService($shopifyGqlClient);
-            $bulkOperationData = $bulkOperationService->runBulkOperation($this->last_processed_at,$this->specifier);
+            $bulkOperationData = $bulkOperationService->runBulkOperation($this->last_processed_at,$this->specifier, $this->current_time);
 
             if ($bulkOperationData) {
                 ShopBulkQueryOperation::create([
@@ -49,9 +53,11 @@ class RequestBulkQueryJob implements ShouldQueue
                     'bulk_query_id' => $bulkOperationData['id'],
                     'status' => $bulkOperationData['status'],
                 ]);
+            } else {
+                $this->release(1); 
             }
         } catch (\Exception $e) {
-            return true;
+            throw new Exception('Failed to request bulk query.');
         }
     }
 }

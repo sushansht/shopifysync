@@ -11,7 +11,8 @@ class ShopifySyncShop extends Model
 
     protected $fillable = [
         'specifier',
-        'last_processed_at',
+        'product_processed_at',
+        'collection_processed_at',
         'is_bulk_query_in_progress'
     ];
 }

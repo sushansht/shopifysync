@@ -2,7 +2,6 @@
 
 namespace dpl\ShopifySync\Console;
 
-use dpl\ShopifySync\Jobs\ProcessShopSyncJob;
 use dpl\ShopifySync\Jobs\ShopUpdateWatcherJob;
 use Exception;
 use Illuminate\Console\Command;
@@ -30,7 +29,6 @@ class AddShopsToQueueCommand extends Command
     {
         try{
             $shopModel = config('shopifysync.shop_model');
-
             $batchSize = (int) $this->argument('batchSize');
 
             if ($batchSize <= 0) {
@@ -39,7 +37,6 @@ class AddShopsToQueueCommand extends Command
             }
 
             $activeShopCount = $shopModel::where(config('shopifysync.active_shop_query'))->count();
-
             $jobCount = ceil($activeShopCount / $batchSize);
 
             for ($jobIndex = 0; $jobIndex < $jobCount; $jobIndex++) {

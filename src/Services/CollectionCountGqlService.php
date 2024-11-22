@@ -18,20 +18,22 @@ class CollectionCountGqlService
      * @return array|null
      */
     
-    public function getCollectionCount($updatedAt,$type)
+    public function getCollectionCount($updatedAt, $currentProcessAt,$type)
     {
-        $query = $updatedAt === null 
-        ? '{
-            collectionsCount(query: "published_status:approved AND collection_type:'.$type.'") {
-                count
+        $queryCondition = "published_status:approved AND collection_type:{$type} AND updated_at:<'{$currentProcessAt}'";
+
+        if ($updatedAt !== null) {
+            $queryCondition .= " AND updated_at:>'{$updatedAt}'";
+        }
+
+        $query = <<<QUERY
+            query {
+                collectionsCount(query: "{$queryCondition}") {
+                    count
+                }
             }
-        }'
-        : '{
-            collectionsCount(query: "published_status:approved AND updated_at:>' . $updatedAt . 'AND collection_type:'.$type.'") {
-                count
-            }
-        }';
-        
+        QUERY;
+
         try {
             $response = $this->client->query($query);
             $responseData = json_decode($response->getBody()->getContents(), true);

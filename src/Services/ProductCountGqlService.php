@@ -19,12 +19,12 @@ class ProductCountGqlService
      * @return array|null
      */
 
-    public function getProductsCount($updatedAt)
+    public function getProductsCount($updatedAt, $current_processed_time)
     {
-        $queryCondition = "status:active";
+        $queryCondition = "status:active AND updated_at:<'{$current_processed_time}'";
 
         if ($updatedAt !== null) {
-            $queryCondition .= " AND updated_at:>{$updatedAt}";
+            $queryCondition .= " AND updated_at:>'{$updatedAt}'";
         }
 
         $graphQL = <<<QUERY
@@ -34,7 +34,6 @@ class ProductCountGqlService
                 }
             }
         QUERY;
-
         try {
             $response = $this->client->query($graphQL);
             $responseData = json_decode($response->getBody()->getContents(), true);

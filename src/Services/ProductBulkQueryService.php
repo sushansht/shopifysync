@@ -24,10 +24,10 @@ class ProductBulkQueryService
         $queryCondition = "status:active";
 
         if ($lastFeedRefresh !== null) {
-            $queryCondition .= " AND updated_at:>{$lastFeedRefresh}";
+            $queryCondition .= " AND updated_at:>'{$lastFeedRefresh}'";
         }
 
-        $queryCondition .= " AND updated_at:<{$current_time}";
+        $queryCondition .= " AND updated_at:<'{$current_time}'";
 
 
         $shop_model = config('shopifysync.shop_model');

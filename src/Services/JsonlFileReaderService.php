@@ -15,7 +15,6 @@ class JsonlFileReaderService
         $dataModelMappingClass = config('shopifysync.data_saving_class');
         $dataModelMappingFunction = config('shopifysync.data_saving_function');
 
-
         $currentProductId = null;
         $currentShopifyProduct = "";
         $currentGroup = [

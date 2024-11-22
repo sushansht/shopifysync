@@ -1,6 +1,8 @@
 <?php
 namespace dpl\ShopifySync\Jobs;
 
+use dpl\ShopifySync\Models\ShopBulkQueryOperation;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -10,13 +12,14 @@ use Illuminate\Queue\SerializesModels;
 class DownloadBulkFileJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-    protected $jsonl_file_url,$specifier;
+
+    protected $token,$specifier;
     /**
      * Create a new job instance.
      */
-    public function __construct($jsonl_file_url,$specifier)
+    public function __construct($specifier, $token)
     {
-        $this->jsonl_file_url = $jsonl_file_url;
+        $this->token = $token;
         $this->specifier = $specifier;
     }
     /**
@@ -24,12 +27,25 @@ class DownloadBulkFileJob implements ShouldQueue
      */
     public function handle(): void
     {
+        $bulkOperation = ShopBulkQueryOperation::where('specifier', $this->specifier)
+                        ->whereNotNull('file_url')
+                        ->whereIn('status', ['COMPLETED'])
+                        ->orderBy('created_at' , 'desc')
+                        ->first();
+
+        if (!$bulkOperation) {
+            throw new Exception('bulk operation not found');
+        }
+
         $folderName = 'bulk_products_jsonl';
         $fileName = $this->specifier."-bulk-product.jsonl";
-        $saveFileToStorage = downloadJsonlFile($this->jsonl_file_url,$fileName,$folderName);
-        if($saveFileToStorage){
-            $filePath = $folderName.'/'.$fileName;
-            ProcessBulkProductFileJob::dispatch($this->specifier, $filePath)->onQueue('shopifysync-process-file');
+        $saveFileToStorage = downloadJsonlFile($bulkOperation->file_url,$fileName,$folderName);
+
+        if (!$saveFileToStorage) {
+            throw new Exception('cannot download and save josnl file');
         }
+
+        $bulkOperation->local_file_path = $folderName.'/'.$fileName;
+        $bulkOperation->save();
     }
 }

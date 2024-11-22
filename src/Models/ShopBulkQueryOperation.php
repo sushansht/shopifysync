@@ -11,6 +11,7 @@ class ShopBulkQueryOperation extends Model
         'bulk_query_id',
         'status',
         'file_url',
+        'local_file_path',
         'completed_at'
     ];
 }

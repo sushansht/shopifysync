@@ -52,16 +52,9 @@ class BulkOperationPollingService
         }
     }
 
-    public static function pollAndUpdateBulkQueryStatus($specifier, $token)
+    public static function pollAndUpdateBulkQueryStatus($bulkQuery, $specifier, $token)
     {
-        // $shop = Shop::where(['id' => $shop_id])->first();
-        $bulkQuery = ShopBulkQueryOperation::where('specifier', $specifier)
-                        ->whereIn('status', ['CREATED', 'RUNNING'])
-                        ->where('file_url', null)
-                        ->first();
-        if (!$bulkQuery) {
-            return "Not bulk query found";
-        }
+
         try {
             $shopifyGqlClient = new Graphql($specifier, $token);
             $pollingService = new BulkOperationPollingService($shopifyGqlClient);
@@ -69,18 +62,7 @@ class BulkOperationPollingService
             // Poll the bulk operation status
             $pollingResult = $pollingService->pollBulkOperationStatus($bulkQuery->bulk_query_id);
 
-            if ($pollingResult) {
-                // Update the database with the status and URL
-                $bulkQuery->update([
-                    'status' => $pollingResult['status'],
-                    'file_url' => $pollingResult['url'] ?? null, // Save file URL if exists
-                    'completed_at' => $pollingResult['completedAt'] ?? null,
-                ]);
-
-                if($pollingResult['url'] && $pollingResult['status'] == "COMPLETED"){
-                    DownloadBulkFileJob::dispatch($pollingResult['url'],$specifier)->onQueue('shopifysync-download-file');
-                }
-            }
+            return $pollingResult;
         } catch (\Exception $e) {
             Log::error('Exception occurred while polling: ' . $e->getMessage());
         }
