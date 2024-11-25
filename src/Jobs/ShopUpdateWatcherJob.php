@@ -65,7 +65,7 @@ class ShopUpdateWatcherJob implements ShouldQueue, ShouldBeUnique
                     $product_processed_at = $sync_shop->product_processed_at;
                     $collection_processed_at = $sync_shop->collection_processed_at;
                 } else {
-                    $last_updated = $last_updated_model->where($specifier_column, $specifier)->first();
+                    $last_updated = $last_updated_model::where($specifier_column, $specifier)->first();
                     if ($last_updated) {
                         $last_updated_at = $last_updated->$last_updated_column;
                     } else {
