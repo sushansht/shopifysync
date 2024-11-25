@@ -15,5 +15,7 @@ return [
     'data_saving_function' => '',
     'collection_saving_service' => '',
     'collection_saving_function' => '',
-    'should_sync_metafield_column' => ""
+    'should_sync_metafield_column' => "",
+    'last_updated_model' => '',
+    'last_updated_column' => ''
 ];

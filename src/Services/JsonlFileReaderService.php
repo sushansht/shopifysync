@@ -2,7 +2,6 @@
 
 namespace dpl\ShopifySync\Services;
 
-use dpl\ShopifySync\Type\ProductResult;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
@@ -28,7 +27,7 @@ class JsonlFileReaderService
         $productGidRegex = '/gid:\\/\\/shopify\\/Product\\/(\\d+)/';
         $variantGidRegex = '/gid:\\/\\/shopify\\/ProductVariant\\/(\\d+)/';
         $imageGidRegex = '/gid:\\/\\/shopify\\/MediaImage\\/(\\d+)/';
-        $videoGidRegex = '/gid:\\/\\/shopify\\/MediaVideo\\/(\\d+)/';
+        $videoGidRegex = '/gid:\\/\\/shopify\\/Video\\/(\\d+)/';
         $metafieldGidRegex = '/gid:\\/\\/shopify\\/Metafield\\/(\\d+)/';
 
         $filePath = storage_path('app/public/'.$jsonFilePath);

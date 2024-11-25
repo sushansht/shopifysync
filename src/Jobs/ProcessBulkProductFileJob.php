@@ -2,8 +2,8 @@
 namespace dpl\ShopifySync\Jobs;
 
 use dpl\ShopifySync\Models\ShopBulkQueryOperation;
-use dpl\ShopifySync\Models\ShopifySyncShop;
 use dpl\ShopifySync\Services\JsonlFileReaderService;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -30,19 +30,24 @@ class ProcessBulkProductFileJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $bulkOperation = ShopBulkQueryOperation::where('specifier', $this->specifier)
-                    ->whereNotNull('file_url')
-                    ->whereNotNull('local_file_path')
-                    ->whereIn('status', ['COMPLETED'])
-                    ->orderBy('created_at' , 'desc')
-                    ->first();
+        try {
+            $bulkOperation = ShopBulkQueryOperation::where('specifier', $this->specifier)
+                        ->whereNotNull('file_url')
+                        ->whereNotNull('local_file_path')
+                        ->whereIn('status', ['COMPLETED'])
+                        ->orderBy('created_at' , 'desc')
+                        ->first();
+                        
+            if (!$bulkOperation) {
+                throw new Exception('Bulk Query operation not found while processing the file.');
+            }
 
-        $filePath = $bulkOperation->local_file_path;
-        $readerService = new JsonlFileReaderService();
-        $readerService->processJsonlByProductGid($this->specifier,$filePath);
-        $sync_shop = ShopifySyncShop::where('specifier', $this->specifier)->update([
-                    'is_bulk_query_in_progress' => 0,
-                    'product_processed_at' => $this->current_processed_time
-        ]);
+            $filePath = $bulkOperation->local_file_path;
+            $readerService = new JsonlFileReaderService();
+            $readerService->processJsonlByProductGid($this->specifier,$filePath);
+        } catch (Exception $e) {
+            throw new Exception($e->getMessage());
+        }
+      
     }
 }

@@ -2,8 +2,7 @@
 
 namespace dpl\ShopifySync\Services;
 
-use dpl\ShopifySync\Jobs\CollectionFetchAndProcessJob;
-use Illuminate\Support\Facades\Log;
+use Exception;
 
 class CollectionGqlService
 {
@@ -21,110 +20,109 @@ class CollectionGqlService
      * @return array|null
      */
         
-    public function getCollections($updatedAt,$cursor,$collectionType)
+    public function getCollections($collection_processed_at, $current_processed_time,$cursor)
     {
         $queryParam = "first: 25";
+        $queryCondtion = "";
         if ($cursor !== null) {
-            Log::channel("daily")->info("getCollections: cursor is null, not first page");
-            $isFirstPage = false;
-            $queryParam .= ", after: \"$cursor\"";
+            $queryParam .= ", after: {$cursor}";
         }
-    
-        if ($updatedAt !== null) {
-            $queryParam .= ", query: \"updated_at:>$updatedAt AND published_status:approved AND collection_type:$collectionType\"";
-        } else {
-            $queryParam .= ", query: \"published_status:approved AND collection_type:$collectionType\"";
-        }
-        Log::channel("daily")->info("Query params for collectiongql: ". $queryParam);
-        $graphQL = '{
-            collections('.$queryParam.') {
-                edges {
-                    node {
-                        id
-                        title
-                        handle
-                        updatedAt
-                        sortOrder
-                        productsCount {
-                            count
-                        }
-                        products(first: 250) {
-                            nodes {
-                                id
+        $queryCondtion = "published_status:approved AND updated_at:<'{$current_processed_time}'";
+
+        if ($collection_processed_at !== null) {
+            $queryCondtion .= " AND updated_at:>'{$collection_processed_at}'";
+        } 
+
+        $graphQL =  <<<QUERY
+            query {
+                collections({$queryParam}, query: "{$queryCondtion}") {
+                    edges {
+                        node {
+                            id
+                            title
+                            handle
+                            updatedAt
+                            sortOrder
+                            ruleSet {
+                                rules {
+                                    condition
+                                }
                             }
-                            pageInfo {
-                                hasNextPage
-                                endCursor
+                            productsCount {
+                                count
+                            }
+                            products(first: 250) {
+                                nodes {
+                                    id
+                                }
+                                pageInfo {
+                                    hasNextPage
+                                    endCursor
+                                }
                             }
                         }
                     }
-                }
-                pageInfo{
-                    hasNextPage
-                    endCursor
+                    pageInfo{
+                        hasNextPage
+                        endCursor
+                    }
                 }
             }
-        }';
-        try {
-                $response = $this->client->query($graphQL);
-                $responseData = json_decode($response->getBody()->getContents(), true);
-
-                if (
-                    isset($responseData['data']['collections']) &&
-                    isset($responseData['data']['collections']['pageInfo']) &&
-                    $responseData['data']['collections']['pageInfo']['hasNextPage'] == true
-                ) {
-                    $endCursor = $responseData['data']['collections']['pageInfo']['endCursor'];
-                    CollectionFetchAndProcessJob::dispatch($this->specifier, $this->token, $updatedAt,$endCursor,$collectionType, false)
-                                ->onQueue('shopifysync-collection-job');
-                }
-                        
-            return $responseData['data']['collections'] ?? 0;
-        } catch (\Exception $e) {
-            return 0;
+        QUERY;
+        $response = $this->client->query($graphQL);
+        $responseData = json_decode($response->getBody()->getContents(), true);
+        if (!empty($responseData['errors'])) {
+            throw new Exception("Collections query error :".  json_encode($response['errors']));
         }
+        return $responseData['data']['collections'] ?? []; 
     }
     
-    public function getSingleCollectionWithProducts($productCursor,$collectionId)
+    public function getSingleCollectionWithProducts($productCursor, $collectionId)
     {
-        $productQueryParam = "first: 250";
+        $queryParam = "first: 250";
+
         if ($productCursor !== null) {
-            $productQueryParam .= ", after: \"$productCursor\"";
+            $queryParam .= ", after: {$productCursor}";
         }
-        $collectionQueryParam = "first:1,query: \"id:$collectionId\"";
-     
-        Log::channel("daily")->info("productQueryParam: ". $productQueryParam);
-        $graphQL = '{
-            collections('.$collectionQueryParam.') {
-                edges {
-                    node {
-                        id
-                        title
-                        handle
-                        updatedAt
-                        sortOrder
-                        productsCount {
-                            count
-                        }
-                        products('.$productQueryParam.') {
-                            nodes {
-                                id
+
+        $graphQL = <<<QUERY
+            {
+                collections(first:1,query:"id:{$collectionId}") {
+                    edges {
+                        node {
+                            id
+                            title
+                            handle
+                            updatedAt
+                            sortOrder
+                            ruleSet {
+                                rules {
+                                    condition
+                                }
                             }
-                            pageInfo {
-                                hasNextPage
-                                endCursor
+                            productsCount {
+                                count
+                            }
+                            products({$queryParam}, query :"status:active") {
+                                nodes {
+                                    id
+                                }
+                                pageInfo {
+                                    hasNextPage
+                                    endCursor
+                                }
                             }
                         }
                     }
                 }
             }
-        }';
-        try {
-            $response = $this->client->query($graphQL);
-            $responseData = json_decode($response->getBody()->getContents(), true);
-            return $responseData['data']['collections'] ?? 0;
-        } catch (\Exception $e) {
-            return 0;
+        QUERY;
+
+        $response = $this->client->query($graphQL);
+        $responseData = json_decode($response->getBody()->getContents(), true);
+        if (!empty($responseData['errors'])) {
+            throw new Exception("Single Collections query error :".  json_encode($response['errors']));
         }
+        return $responseData['data']['collections'] ?? [];
     }
 }

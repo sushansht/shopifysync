@@ -2,8 +2,8 @@
 
 namespace dpl\ShopifySync\Services;
 
+use Exception;
 use Shopify\Clients\Graphql;
-use Illuminate\Support\Facades\Log;
 
 class ProductBulkQueryService
 {
@@ -150,15 +150,14 @@ class ProductBulkQueryService
         }
         QUERY;
 
-        try {
-            $response = $this->client->query($graphQL);
-            $responseData = json_decode($response->getBody()->getContents(), true);
-            Log::channel("daily")->info("Response Data runBulkOperation Method : " . json_encode($responseData));
-
-            return $responseData['data']['bulkOperationRunQuery']['bulkOperation'] ?? null;
-        } catch (\Exception $e) {
-            Log::error('GraphQL query error: ' . $e->getMessage());
-            return null;
+        $response = $this->client->query($graphQL);
+        $responseData = json_decode($response->getBody()->getContents(), true);
+        if (!empty($responseData['data']['userErrors'])) {
+            throw new Exception("Bulk query create error :".  json_encode($response['data']['userErrors']));
         }
+        if (!empty($responseData['errors'])) {
+            throw new Exception("Bulk query create error :".  json_encode($response['errors']));
+        }
+        return $responseData['data']['bulkOperationRunQuery']['bulkOperation'] ?? null;
     }
 }

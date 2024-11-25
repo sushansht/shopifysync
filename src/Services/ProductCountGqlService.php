@@ -34,12 +34,13 @@ class ProductCountGqlService
                 }
             }
         QUERY;
-        try {
             $response = $this->client->query($graphQL);
             $responseData = json_decode($response->getBody()->getContents(), true);
+            if (!empty($responseData['errors'])) {
+                Log::channel('shopify-sync')->error("Error while getting product count. error : {error}",[
+                    'error' => json_encode($response['errors'])
+                ]);
+            }
             return $responseData['data']['productsCount']['count'] ?? 0;
-        } catch (\Exception $e) {
-            return 0;
-        }
     }
 }

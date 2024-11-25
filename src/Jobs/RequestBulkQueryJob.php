@@ -20,6 +20,7 @@ class RequestBulkQueryJob implements ShouldQueue
     protected $token;
     protected $last_processed_at;
     protected $current_time;
+    
     /**
      * Create a new job instance.
      */
@@ -54,10 +55,10 @@ class RequestBulkQueryJob implements ShouldQueue
                     'status' => $bulkOperationData['status'],
                 ]);
             } else {
-                $this->release(1); 
+                throw new Exception('Cannot create bulk request');
             }
         } catch (\Exception $e) {
-            throw new Exception('Failed to request bulk query.');
+            throw new Exception('Failed to request bulk query.: ' .$e->getMessage());
         }
     }
 }

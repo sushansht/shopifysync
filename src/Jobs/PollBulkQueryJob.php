@@ -26,40 +26,42 @@ class PollBulkQueryJob implements ShouldQueue
         $this->specifier = $specifier;
         $this->token = $token;
     }
+    
     /**
      * Execute the job.
      */
     public function handle()
     {
-        $bulkOperation = ShopBulkQueryOperation::where([
-            'specifier' => $this->specifier,
-            'file_url' => null,
-        ])
-        ->whereIn('status', ['CREATED', 'RUNNING'])
-        ->orderBy('created_at' , 'desc')
-        ->first();
+        try {
 
-        if (!$bulkOperation ) {
-            throw new Exception('Bulk operation not found');
-        }
+            $bulkOperation = ShopBulkQueryOperation::where([
+                'specifier' => $this->specifier,
+                'file_url' => null,
+            ])
+            ->whereIn('status', ['CREATED', 'RUNNING'])
+            ->orderBy('created_at' , 'desc')
+            ->first();
 
-        $shopifyGqlClient = new Graphql($bulkOperation->specifier, $this->token);
-        $pollingService = new BulkOperationPollingService($shopifyGqlClient);
-        $pollingResult = $pollingService->pollAndUpdateBulkQueryStatus($bulkOperation, $this->specifier, $this->token);
+            if (!$bulkOperation) {
+                throw new Exception('Bulk operation not found while polling');
+            }
 
-        if (!$pollingResult) {
-            throw new Exception('Cannot get polling result from shopify');
-        }
+            $shopifyGqlClient = new Graphql($bulkOperation->specifier, $this->token);
+            $pollingService = new BulkOperationPollingService($shopifyGqlClient);
+            $pollingResult = $pollingService->pollAndUpdateBulkQueryStatus($bulkOperation, $this->specifier, $this->token);
 
-        // Update the database with the status and URL
-        $bulkOperation->update([
-            'status' => $pollingResult['status'],
-            'file_url' => $pollingResult['url'] ?? null, // Save file URL if exists
-            'completed_at' => $pollingResult['completedAt'] ?? null,
-        ]);
+            // Update the database with the status and URL
+            $bulkOperation->update([
+                'status' => $pollingResult['status'],
+                'file_url' => $pollingResult['url'] ?? null, // Save file URL if exists
+                'completed_at' => $pollingResult['completedAt'] ?? null,
+            ]);
 
-        if ($pollingResult['status'] != 'COMPLETED' || !$pollingResult['url']) {
-            $this->release(30);
+            if ($pollingResult['status'] != 'COMPLETED' || !$pollingResult['url']) {
+                $this->release(30);
+            }
+        } catch (Exception $e) {
+            throw new Exception($e->getMessage());
         }
     }
 }

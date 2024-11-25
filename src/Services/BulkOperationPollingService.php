@@ -2,8 +2,7 @@
 
 namespace dpl\ShopifySync\Services;
 
-use dpl\ShopifySync\Models\ShopBulkQueryOperation;
-use dpl\ShopifySync\Jobs\DownloadBulkFileJob;
+use Exception;
 use Shopify\Clients\Graphql;
 use Illuminate\Support\Facades\Log;
 
@@ -41,21 +40,16 @@ class BulkOperationPollingService
             }
         }';
 
-        try {
-            $response = $this->client->query($graphQL);
-            $responseData = json_decode($response->getBody()->getContents(), true);
-
-            return $responseData['data']['node'] ?? null;
-        } catch (\Exception $e) {
-            Log::error('GraphQL polling error: ' . $e->getMessage());
-            return null;
+        $response = $this->client->query($graphQL);
+        $responseData = json_decode($response->getBody()->getContents(), true);
+        if (!empty($responseData['errors'])) {
+            throw new Exception("Bulk query poll error :".  json_encode($response['errors']));
         }
+        return $responseData['data']['node'] ?? null;
     }
 
     public static function pollAndUpdateBulkQueryStatus($bulkQuery, $specifier, $token)
     {
-
-        try {
             $shopifyGqlClient = new Graphql($specifier, $token);
             $pollingService = new BulkOperationPollingService($shopifyGqlClient);
 
@@ -63,8 +57,5 @@ class BulkOperationPollingService
             $pollingResult = $pollingService->pollBulkOperationStatus($bulkQuery->bulk_query_id);
 
             return $pollingResult;
-        } catch (\Exception $e) {
-            Log::error('Exception occurred while polling: ' . $e->getMessage());
-        }
     }
 }
